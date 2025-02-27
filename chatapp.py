@@ -1,14 +1,16 @@
 from tkinter import * # 和import tk的区别是，这样不用在后续申明tkinter
 from tkinter import messagebox
 from zhipuai import ZhipuAI
+from openai import OpenAI
 import time
 import csv
 import os
 import requests
 import json
 
-# 创建全局变量，用于申明不同的ai
+# 创建全局变量，用于申明不同的ai，和初始温度
 current_api = "zhipuai"
+temperature = 1.0
 
 ### 定义主函数
 def printget(event = None):
@@ -26,6 +28,9 @@ def printget(event = None):
             ai_response = zhipuai(user_input)
         elif current_api == "aliyunai":
             ai_response = aliyun(user_input)
+            print(f"当前api是：{current_api}")
+        elif current_api == "deepseek":
+            ai_response = deepseek(user_input,temperature)
             print(f"当前api是：{current_api}")
         display_text.config(state=NORMAL)
         display_text.insert(END, f"AI: {ai_response}\n\n", "left")
@@ -91,6 +96,75 @@ def aliyun(text):
     
     ### 保存文件
 
+## deepseek
+def deepseek(text,tem): 
+    credentials_file_path = 'deepseek_secret.txt'
+    credentials = {}
+    with open(credentials_file_path, 'r') as file:
+        for line in file:
+            line = line.strip()
+            key, value = line.split('=', 1)
+            credentials[key] = value
+
+    API_KEY = credentials.get('DEEPSEEKAPI')
+    client = OpenAI(api_key=API_KEY, base_url="https://api.deepseek.com")
+
+    response = client.chat.completions.create(
+        model="deepseek-chat",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant"},
+            {"role": "user", "content": text},
+        ],
+        stream=False,
+        temperature=tem
+        
+    )
+
+    answer = response.choices[0].message.content
+    return answer
+
+### 转换api函数
+def switch_api(api):
+    global current_api
+    current_api = api
+    messagebox.showinfo("提示", f"API 切换成功！当前使用 {api}")
+
+### 更改模型温度
+def switch_tem():
+    def set_temperature():
+        global temperature
+        try:
+            new_temp = float(tembox.get())
+            if 0 <= new_temp <= 2:
+                temperature = new_temp
+                messagebox.showinfo("提示", f"当前温度设置为 {temperature}")
+                tembox.destroy()
+            else:
+                messagebox.showerror("错误", "请输入 0 - 2 之间的值！")
+        except ValueError:
+            messagebox.showerror("错误", "请输入数字！")
+    
+    # 创建新窗口
+    temperature_window = Toplevel(root)
+    temperature_window.title("更改模型温度")
+    temperature_window.geometry("300x150")
+    
+    # 设置温度调节控件
+    tem_var = StringVar()
+    tem_label = Label(temperature_window, text="设置模型温度（0-2）：")
+    tem_label.pack(pady=10)
+    
+    # 设置温度spinbox空间，调整温度
+    tembox = Spinbox(temperature_window,from_=0,to=2,increment=0.1,textvariable=tem_var)
+    tembox.pack(pady=10)
+    tembox.delete(0, END) # 清除框内值
+    tembox.insert(0, temperature) # 在框内插入当前温度
+    
+    confirm_button = Button(temperature_window, text="确认", command=set_temperature)
+    confirm_button.pack(pady=10)
+     
+    
+
 ### 保存文件
 def save_chat(message,response):
     timestamp = time.strftime("%Y-%m-%d_%H-%M-%S") # 保存时间
@@ -127,42 +201,35 @@ def create_new_chat():
     display_text.delete(1.0, END)
     display_text.config(state=DISABLED)
 
-
-# 窗口函数，点击设置出现窗口
-def show_setting_windows():
-    setting_windows = Toplevel(root) #新建
-    setting_windows.title("设置")
-    setting_windows.geometry("200x200")
-    
-    setting_list = Listbox(setting_windows,height = 10,selectmode=SINGLE)
-    setting_list.insert(1, "切换质谱AI")
-    setting_list.insert(2,"切换阿里云AI")
-    setting_list.insert(3, "其他设置")
-    setting_list.pack( padx=3, pady=3)
-    
-    
-# 设置选项函数
-    def setting_select(event): #event用于传进上面的函数
-        global current_api
-        selection_index = setting_list.curselection() # 返回选项索引
-        if selection_index:
-            option = setting_list.get(selection_index)
-            print(f"Selected option: {option}")
-            if option == "切换质谱API":
-                current_api = "zhipuai"
-                messagebox.showinfo("提示", "API切换成功！当前使用质谱ai")  # 弹出提示框
-            elif option == "切换阿里云AI":
-                current_api = "aliyunai"
-                messagebox.showinfo("提示", "API切换成功！当前使用阿里云")
-    ########未完成
-
-    setting_list.bind("<<ListboxSelect>>", setting_select) # 被选择时
-
 ### 创建窗口
 root = Tk() # root意思是主窗口，可以改变
 root.geometry("1000x600") # 创建窗口
 root.title("FLYINGPIGAI")
 # root.iconbitmap 改变标题的icon
+
+## 创建菜单栏
+menubar = Menu(root)
+root.config(menu=menubar)
+
+## 创建设置菜单
+setting_menu = Menu(menubar, tearoff=0)  ## tearoff用于是否可将该选项独立出来
+menubar.add_cascade(label="设置", menu=setting_menu)
+
+# 创建切换 AI 子菜单
+api_submenu = Menu(setting_menu, tearoff=0)
+api_submenu.add_command(label="切换为质谱 AI", command=lambda: switch_api("zhipuai"))
+api_submenu.add_command(label="切换为阿里云 AI", command=lambda: switch_api("aliyunai"))
+api_submenu.add_command(label="切换为 Deepseek", command=lambda: switch_api("deepseek"))
+
+# 添加切换 AI 菜单项（父菜单）
+setting_menu.add_cascade(label="切换 API", menu=api_submenu )
+setting_menu.add_cascade(label="更改模型温度",command=switch_tem )
+
+## 创建功能菜单
+function_menu = Menu(menubar, tearoff=0)
+menubar.add_cascade(label="功能", menu=function_menu)
+function_menu.add_command(label="查看历史", command=display_history)
+function_menu.add_command(label="新建对话", command=create_new_chat)
 
 ### 创建头顶文本框
 lab = Label(root,text = "FLYINGPIG-AI", font=("华文中宋",25)) # root主窗口，relief窗口形态
@@ -172,11 +239,6 @@ lab.pack() # 将lable放置在窗口上
 # basicframe新建一个顶部框架
 basicframe = Frame(root,)
 basicframe.pack(side = TOP,fill = X)
-
-# 设置按钮
-settingbutton = Button(basicframe,text="设置",relief = "groove", font=("黑体",15,"bold"),command=show_setting_windows)
-settingbutton.pack(side = LEFT,padx=5,pady = 5)
-
 
 
 ### 创建对话显示框
@@ -203,15 +265,6 @@ searchbutton.pack(side=RIGHT, padx=10, pady=5) #设置与父控件的间距
 
 # 绑定回车键事件
 search_message.bind('<Return>', printget) 
-
-# 创建历史和新建对话框功能
-expandframe = Frame(root)
-expandframe.pack(side = LEFT)
-
-historybotton = Button(expandframe,text="查看历史",width= 15,command=display_history)
-historybotton.pack(side=LEFT,padx = 5,pady = 5)
-createbotton = Button(expandframe,text="新建对话",width= 15,command=create_new_chat)
-createbotton.pack(side=RIGHT,padx = 5,pady = 5)
 
 
 mainloop() # 循环重复窗口
