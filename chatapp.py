@@ -1,16 +1,26 @@
 from tkinter import * # 和import tk的区别是，这样不用在后续申明tkinter
 from tkinter import messagebox
-from zhipuai import ZhipuAI
 from openai import OpenAI
 import time
 import csv
 import os
 import requests
 import json
+import subprocess
+       
 
-# 创建全局变量，用于申明不同的ai，和初始温度
+# 创建全局变量，用于申明不同的ai，和初始温度，和统一端口
 current_api = "zhipuai"
 temperature = 1.0
+BASE_URL = "http://localhost:9090/v1"
+
+# 模型映射表（根据你的simple-one-api配置调整）
+MODEL_MAPPING = {
+    "zhipuai": "glm-4-flash",
+    "aliyunai": "Qwen/Qwen2.5-7B-Instruct",
+    "deepseek": "deepseek-chat"
+}
+
 
 ### 定义主函数
 def printget(event = None):
@@ -24,14 +34,26 @@ def printget(event = None):
         display_text.insert(END, f"You: {user_input}\n","right") # 将用户输入的代码显示在对话框内，end表示在末尾插入字符
         display_text.config(state=DISABLED)
         
-        if current_api == "zhipuai":
-            ai_response = zhipuai(user_input)
-        elif current_api == "aliyunai":
-            ai_response = aliyun(user_input)
-            print(f"当前api是：{current_api}")
-        elif current_api == "deepseek":
-            ai_response = deepseek(user_input,temperature)
-            print(f"当前api是：{current_api}")
+        ### 增加启动simple-one-api
+        
+
+        current_dir = os.path.dirname(__file__)
+        exe_folder = os.path.join(current_dir, "simple-one-api")
+        exe_path = os.path.join(exe_folder, "simple-one-api.exe")
+
+        os.chdir(exe_folder)
+        subprocess.Popen([exe_path])
+
+    
+        # 继续执行其他代码
+        print("程序已在后台运行...")
+        
+        try:
+            ai_response = unified_api_call(user_input, temperature)
+        except Exception as e:
+            ai_response = f"发生错误：{str(e)}"
+        
+        # 显示ai相应
         display_text.config(state=NORMAL)
         display_text.insert(END, f"AI: {ai_response}\n\n", "left")
         display_text.config(state=DISABLED)
@@ -42,7 +64,33 @@ def printget(event = None):
          # 清空输入框
         search_message.delete("1.0", END) # 从索引0开始清除到end位置
 
+def unified_api_call(text, temperature):
+    try:
+        client = OpenAI(base_url=BASE_URL, api_key="sk-123456")  # 密钥未来可以改变
+        
+        response = client.chat.completions.create(
+            model=MODEL_MAPPING[current_api],
+            messages=[{"role": "user", "content": text}],
+            temperature=temperature
+            
+        )
+        return response.choices[0].message.content
+        
+    except Exception as e:
+        return f"API调用失败：{str(e)}"
+
+'''
 ### 调用质谱api
+def zhipuai(text):
+    client = OpenAI(api_key='sk-123456', base_url="http://localhost:9090/v1/chat/completions")
+    response = client.chat.completions.create(
+                model="random",
+                messages=[{"role": "user", "content": text}]
+            )
+    airesponse = response.choices[0].message.content
+    return airesponse
+
+
 def zhipuai(text):
     credentials_file_path = 'zhipu_secret.txt'
     # 初始化字典来存储密钥
@@ -95,8 +143,25 @@ def aliyun(text):
     return answer
     
     ### 保存文件
-
 ## deepseek
+def deepseek(text,tem): 
+    
+    client = OpenAI(api_key='sk-123456', base_url="http://localhost:9090/v1/chat/completions")
+
+    response = client.chat.completions.create(
+        model="random",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant"},
+            {"role": "user", "content": text},
+        ],
+        stream=False,
+        temperature=tem
+        
+    )
+
+    answer = response.choices[0].message.content
+    return answer
+
 def deepseek(text,tem): 
     credentials_file_path = 'deepseek_secret.txt'
     credentials = {}
@@ -122,12 +187,15 @@ def deepseek(text,tem):
 
     answer = response.choices[0].message.content
     return answer
-
+'''
 ### 转换api函数
 def switch_api(api):
     global current_api
-    current_api = api
-    messagebox.showinfo("提示", f"API 切换成功！当前使用 {api}")
+    if api in MODEL_MAPPING:
+        current_api = api
+        messagebox.showinfo("提示", f"已切换到 {api} 接口")
+    else:
+        messagebox.showerror("错误", "不支持的API类型")
 
 ### 更改模型温度
 def switch_tem():
