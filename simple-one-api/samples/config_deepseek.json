@@ -1,0 +1,16 @@
+{
+  "debug": false,
+  "load_balancing": "random",
+  "services": {
+    "openai": [
+      {
+        "models": ["deepseek-chat"],
+        "enabled": true,
+        "credentials": {
+          "api_key": "xxx"
+        },
+        "server_url":"https://api.deepseek.com/v1"
+      }
+    ]
+  }
+}

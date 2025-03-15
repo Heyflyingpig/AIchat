@@ -1,0 +1,15 @@
+{
+  "load_balancing": "random",
+  "services": {
+    "openai": [
+      {
+        "models": ["qwen-plus"],
+        "enabled": true,
+        "credentials": {
+          "api_key": "xxx"
+        },
+        "server_url":"https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
+      }
+    ]
+  }
+}

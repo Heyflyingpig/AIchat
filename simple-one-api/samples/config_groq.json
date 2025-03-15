@@ -1,0 +1,16 @@
+{
+  "server_port": ":9090",
+  "load_balancing": "random",
+  "services": {
+    "openai": [
+      {
+        "models": ["llama3-70b-8192","llama3-8b-8192","gemma-7b-it","mixtral-8x7b-32768"],
+        "enabled": true,
+        "credentials": {
+          "api_key": "xxx"
+        },
+        "server_url":"https://api.groq.com/openai/v1"
+      }
+    ]
+  }
+}

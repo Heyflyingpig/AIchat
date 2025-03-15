@@ -1,0 +1,16 @@
+{
+  "debug": false,
+  "load_balancing": "random",
+  "services": {
+    "qianfan": [
+      {
+        "models": ["yi_34b_chat","ERNIE-Speed-8K","ERNIE-Speed-128K","ERNIE-Lite-8K","ERNIE-Lite-8K-0922","ERNIE-Tiny-8K"],
+        "enabled": true,
+        "credentials": {
+          "api_key": "xxx",
+          "secret_key": "xxx"
+        }
+      }
+    ]
+  }
+}
