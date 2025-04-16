@@ -1,0 +1,92 @@
+{
+  "api_key":"sk-123456",
+  "server_port": ":9090",
+  "debug": false,
+  "load_balancing": "random",
+  "services": {
+    "xinghuo": [  
+      {
+        "models": ["spark-lite"],
+        "enabled": false,
+        "credentials": {
+          "appid": "xxx",
+          "api_key": "xxx",
+          "api_secret": "xxx"
+        }
+      }
+    ],
+    "qianfan": [
+      {
+        "models": ["yi_34b_chat","ERNIE-Speed-8K","ERNIE-Speed-128K","ERNIE-Lite-8K","ERNIE-Lite-8K-0922","ERNIE-Tiny-8K"],
+        "enabled": false,
+        "credentials": {
+          "api_key": "xxx",
+          "secret_key": "xxx"
+        }
+      }
+    ],
+    "hunyuan": [
+      {
+        "models": ["hunyuan-lite"],
+        "enabled": false,
+        "credentials": {
+          "secret_id": "xxx",
+          "secret_key": "xxx"
+        }
+      } 
+    ],
+    "openai": [
+      {
+        "models": ["deepseek-chat"],
+        "enabled": true,
+        "credentials": {
+          "api_key": "sk-1828c06269ed462ba3e999f6d6dd0a51"
+        },
+        "server_url":"https://api.deepseek.com/v1"
+      },
+      {
+        "models": ["deepseek-r1:14b"],
+        "enabled": true,
+        "credentials": {
+          "api_key": "none"
+        },
+        "server_url":"http://localhost:11434/v1"
+      },
+      {
+        "models": ["@cf/meta/llama-2-7b-chat-int8"],
+        "enabled": false,
+        "credentials": {
+          "api_key": "xxx"
+        },
+        "server_url": "https://api.cloudflare.com/client/v4/accounts/xxx/ai/v1/chat/completions"
+      },
+      {
+        "models": ["glm-4-flash"],
+        "enabled": true,
+        "credentials": {
+          "api_key": "49520ba1c63a183b4c6333b4b4d523fe.9C6LVcy8IPz80pyf"
+        },
+        "server_url":"https://open.bigmodel.cn/api/paas/v4/chat/completions"
+      },
+      {
+        "models": ["Qwen/Qwen2.5-7B-Instruct"],
+        "enabled": true,
+        "credentials": {
+        "api_key": "sk-ehujfnldsamycptgcgiatloloviiotlrbpfqaaondzfusbwd"
+        },
+        "server_url":"https://api.siliconflow.cn/v1/chat/completions"
+      }
+    ],
+    "minimax": [
+      {
+        "models": ["abab6-chat"],
+        "enabled": false,
+        "credentials": {
+          "group_id": "1782658868262748467",
+          "api_key": "xxx"
+        },
+        "server_url":"https://api.minimax.chat/v1/text/chatcompletion_pro"
+      }
+    ]
+  }
+}

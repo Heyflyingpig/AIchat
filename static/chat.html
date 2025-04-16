@@ -1,0 +1,154 @@
+<!-- static/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FLYINGPIG-AI</title>
+    <style>
+        body { margin: 0; font-family: Arial; }
+        .container { display: flex; flex-direction: column; height: 100vh; }
+        .header { background: #f0f0f0; padding: 20px; text-align: center; }
+        .chat-area { flex: 1; overflow-y: auto; padding: 20px; }
+        .message { margin: 10px; padding: 10px; border-radius: 5px; }
+        .user-message { background: #e3f2fd; margin-left: 20%; }
+        .ai-message { background: #f5f5f5; margin-right: 20%; }
+        .input-area { padding: 20px; display: flex; gap: 10px; }
+        textarea { flex: 1; resize: none; padding: 10px; }
+        button {
+            padding: 10px 20px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        button:hover {
+            background: #1976D2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>FLYINGPIG-AI</h1>
+            
+            
+            <div class="controls">
+                <select id="apiSelect">
+                    <option value="zhipuai">质谱AI</option>
+                    <option value="aliyunai">阿里云AI</option>
+                    <option value="deepseek">Deepseek</option>
+                </select>
+                <input type="number" id="tempInput" step="0.1" min="0" max="2" value="1.0">
+                <button onclick="newChat()">新建对话</button>
+                <button onclick="loadHistory()">加载历史</button>
+            </div>
+        </div>
+        <!-- 聊天区域 -->
+        <div class="chat-area" id="chatArea"></div>
+
+        <!-- 输入区域 -->
+        <div class="input-area">
+            <textarea id="messageInput" placeholder="输入消息..."></textarea>
+            <button onclick="sendMessage()">发送</button>
+        </div>
+    </div>
+
+    <script>
+        // 初始化
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // API交互，使用异步调用，防止页面阻塞
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            addMessage(message, 'user');
+            input.value = '';//清空输入框内容。
+
+            try {
+                const response = await fetch('/api/send', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},//设置请求头为 JSON 格式
+                    body: JSON.stringify({ message })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    addMessage(data.response, 'ai');
+                } else {
+                    showError(data.error);
+                }
+            } catch (error) {
+                showError('网络错误');
+            }
+        }
+
+        // 界面更新
+        function addMessage(text, sender) {
+            const div = document.createElement('div');
+            div.className = `message ${sender}-message`;
+            div.textContent = text;
+            document.getElementById('chatArea').appendChild(div);
+            window.scrollTo(0, document.body.scrollHeight);//滚动到页面底部，确保最新消息可见。
+        }
+
+        function showError(msg) {
+            alert('错误: ' + msg);
+        }
+        
+        //清空所有记录
+        function newChat() {
+            if (confirm("确定要清空当前对话吗？")) {
+                fetch('/api/new_chat', { method: 'POST' })
+                    .then(response => response.json())// 解析响应为 JSON
+                    .then(data => {
+                        if (data.success) {
+                            document.getElementById('chatArea').innerHTML = ''; // 清空聊天区域
+                        }
+                        else{
+                            showError(data.error);
+                        }
+                    });
+            }
+        }
+        // 设置控制，api选择
+        document.getElementById('apiSelect').addEventListener('change', async (e) => {
+            await fetch('/api/switch', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ api: e.target.value })
+            });
+        });
+        // 温度选择
+        document.getElementById('tempInput').addEventListener('change', async (e) => {
+            await fetch('/api/temperature', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ temp: e.target.value })
+            });
+        });
+        
+        
+        
+        //加载历史
+        function loadHistory() {
+            fetch('/api/history')
+                .then(response => response.json())
+                .then(data => {
+                    const chatArea = document.getElementById('chatArea');
+                    chatArea.innerHTML = '';//清空
+                    data.forEach(entry => {
+                        addMessage(entry[0], 'user'); // 用户消息
+                        addMessage(entry[1], 'ai');   // AI 回复
+                    });
+                });
+        }
+    </script>
+</body>
+</html>
