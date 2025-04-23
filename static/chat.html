@@ -2,53 +2,203 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>FLYINGPIG-AI</title>
     <style>
-        body { margin: 0; font-family: Arial; }
-        .container { display: flex; flex-direction: column; height: 100vh; }
-        .header { background: #f0f0f0; padding: 20px; text-align: center; }
-        .chat-area { flex: 1; overflow-y: auto; padding: 20px; }
-        .message { margin: 10px; padding: 10px; border-radius: 5px; }
-        .user-message { background: #e3f2fd; margin-left: 20%; }
-        .ai-message { background: #f5f5f5; margin-right: 20%; }
-        .input-area { padding: 20px; display: flex; gap: 10px; }
-        textarea { flex: 1; resize: none; padding: 10px; }
-        button {
-            padding: 10px 20px;
-            background: #2196F3;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 3px;
-        }
-        button:hover {
-            background: #1976D2;
-        }
+    /* 新增侧边栏样式 */
+    .sidebar {
+        position: fixed;
+        left: -300px;
+        top: 0;
+        width: 300px;
+        height: 100vh;
+        background: white;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        transition: left 0.3s;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .sidebar.active {
+        left: 0;
+    }
+    .sidebar-header {
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid #eee;
+        justify-content: space-between;
+    }
+    .sidebar-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+    }
+    .history-item {
+        padding: 10px;
+        margin: 5px 0;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+    .history-item {
+        padding: 12px;
+        margin: 8px 0;
+        border: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .sidebar-footer {
+        padding: 15px;
+        border-top: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .menu-icon {
+        position: fixed;
+        left: 10px;
+        top: 10px;
+        cursor: pointer;
+        z-index: 1001;
+        font-size: 24px;
+        padding: 5px;
+        display: block;
+    }
+    body.sidebar-active .menu-icon {
+        display: none;
+    }
+    .container {
+        margin-left: 0;
+        transition: margin-left 0.3s;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    .container.sidebar-active {
+        margin-left: 300px;
+    }
+    .chat-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        transition: margin-left 0.3s;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .session-info {
+        font-size: 0.9em;
+        color: #666;
+    }
+    .input-area {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        padding: 15px 20px;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* 让输入框占据剩余空间 */
+    #messageInput {
+        flex: 1;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 10px;
+        font-size: 1em;
+        resize: none;
+    }
+
+    /* 发送按钮样式 */
+    .input-area button {
+        padding: 10px 15px;
+        border: none;
+        background-color: #007bff;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1em;
+    }
+    .input-area button:hover {
+        background-color: #0056b3;
+    }
+
+    .message {
+        max-width: 80%;
+        padding: 10px 15px;
+        border-radius: 10px;
+        word-break: break-word;
+        line-height: 1.4;
+    }
+
+    /* 用户消息样式 */
+    .user-message {
+        background-color: #dcf8c6;
+        align-self: flex-end;
+    }
+
+    /* AI 消息样式 */
+    .ai-message {
+        background-color: #f1f0f0;
+        align-self: flex-start;
+    }
+    .sidebar-toggle {
+        cursor: pointer;
+        font-size: 24px;
+        padding: 5px;
+        display: none;
+    }
+    .sidebar.active .sidebar-toggle {
+        display: block;
+    }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>FLYINGPIG-AI</h1>
-            
-            
-            <div class="controls">
-                <select id="apiSelect">
+    <!-- 侧边栏图标 -->
+    <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+
+    <!-- 侧边栏 -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>FLYINGPIG-AI</h3>
+            <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
+        </div>
+        
+        <div class="sidebar-content">
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <select id="apiSelect" style="flex:1;">
                     <option value="zhipuai">质谱AI</option>
                     <option value="aliyunai">阿里云AI</option>
                     <option value="deepseek">Deepseek</option>
                 </select>
-                <input type="number" id="tempInput" step="0.1" min="0" max="2" value="1.0">
-                <button onclick="newChat()">新建对话</button>
-                <button onclick="loadHistory()">加载历史</button>
+                <button onclick="newChat()">新建</button>
+            </div>
+            
+            <div id="historyList">
+                <div class="history-item" style="display: none;">
+                    <div class="session-info">
+                        <div class="session-id"></div>
+                        <div class="session-time"></div>
+                    </div>
+                    <div class="preview-text"></div>
             </div>
         </div>
-        <!-- 聊天区域 -->
-        <div class="chat-area" id="chatArea"></div>
+    </div>
+        
+        <div class="sidebar-footer">
+            <button>设置</button>
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: #eee;"></div>
+        </div>
+    </div>
 
-        <!-- 输入区域 -->
+    
+    <div class="container" id="mainContainer">
+        
+        <div class="chat-area" id="chatArea"></div>
         <div class="input-area">
-            <textarea id="messageInput" placeholder="输入消息..."></textarea>
+            <textarea id="messageInput" placeholder="输入消息..." rows = "3"></textarea>
             <button onclick="sendMessage()">发送</button>
         </div>
     </div>
@@ -85,17 +235,19 @@
                     showError(data.error);
                 }
             } catch (error) {
-                showError('网络错误');
+                showError('错误'+ error);
             }
         }
 
         // 界面更新
         function addMessage(text, sender) {
+            const chatArea = document.getElementById('chatArea'); // 获取聊天区域
             const div = document.createElement('div');
-            div.className = `message ${sender}-message`;
+            div.className = `message ${sender}-message`; // 类名保持不变
             div.textContent = text;
-            document.getElementById('chatArea').appendChild(div);
-            window.scrollTo(0, document.body.scrollHeight);//滚动到页面底部，确保最新消息可见。
+            chatArea.appendChild(div);
+            // 修改滚动逻辑，滚动聊天区域而不是整个 body
+            chatArea.scrollTop = chatArea.scrollHeight; 
         }
 
         function showError(msg) {
@@ -109,7 +261,9 @@
                     .then(response => response.json())// 解析响应为 JSON
                     .then(data => {
                         if (data.success) {
-                            document.getElementById('chatArea').innerHTML = ''; // 清空聊天区域
+                            document.getElementById('chatArea').innerHTML = '';
+                            console.log("新会话已创建，正在重新加载历史记录..."); // 添加日志
+                            loadHistory(); // 清空聊天区域
                         }
                         else{
                             showError(data.error);
@@ -125,6 +279,7 @@
                 body: JSON.stringify({ api: e.target.value })
             });
         });
+        /*
         // 温度选择
         document.getElementById('tempInput').addEventListener('change', async (e) => {
             await fetch('/api/temperature', {
@@ -134,20 +289,52 @@
             });
         });
         
-        
-        
-        //加载历史
+        */
+        // 新增侧边栏切换功能
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const main = document.getElementById('mainContainer');
+            const body = document.body; // 获取 body 元素
+
+            sidebar.classList.toggle('active');
+            main.classList.toggle('sidebar-active');
+            body.classList.toggle('sidebar-active'); // 在 body 上也切换类
+        }
+
+        // 修改加载历史功能
         function loadHistory() {
-            fetch('/api/history')
-                .then(response => response.json())
+            fetch('/api/sessions')
+                .then(response => response.json()) //必须解析
                 .then(data => {
-                    const chatArea = document.getElementById('chatArea');
-                    chatArea.innerHTML = '';//清空
-                    data.forEach(entry => {
-                        addMessage(entry[0], 'user'); // 用户消息
-                        addMessage(entry[1], 'ai');   // AI 回复
+                    const historyList = document.getElementById('historyList');
+                    historyList.innerHTML = ''; // 清空historylist，防止重复加载
+                    
+                    if (data.length === 0) {
+                         console.warn("没有历史记录条目可供显示。");
+                         historyList.innerHTML = '<p style="padding: 10px; color: #888;">没有历史会话记录。</p>';
+                    }
+                    data.forEach(([sessionId, sessionData]) => {
+                        const item = document.createElement('div');
+                        item.className = 'history-item';
+                        item.innerHTML = `
+                            <div class="session-info">
+                                <div class="session-id">${sessionId.slice(0, 8)}...</div>
+                                <div class="session-time">${new Date(sessionData.last_time).toLocaleString()}</div>
+                            </div>
+                            <div class="preview-text">${sessionData.preview}</div>
+                        `;
+                        item.onclick = () => loadSession(sessionId);
+                        historyList.appendChild(item);
                     });
                 });
+}
+
+document.addEventListener('DOMContentLoaded', loadHistory);
+
+        async function loadSession(sessionId) {
+            const response = await fetch(`/api/load_session?session=${sessionId}`);
+            const data = await response.json();
+            // 加载会话逻辑...
         }
     </script>
 </body>
