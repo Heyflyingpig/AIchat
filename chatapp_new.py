@@ -55,10 +55,13 @@ def handle_message():
 def switch_api():
     global current_api
     api = request.json.get('api')
+    print(f"当前api是{api}")
     if api in MODEL_MAPPING:
         current_api = api
         return jsonify({'success': True})
-    return jsonify({'success': False, 'error': 'Invalid API'})
+    else:
+        print(f"不存在以下api{api}")
+        return jsonify({'success': False, 'error': 'Invalid API'})
 
 
 @app.route('/api/temperature', methods=['POST'])
@@ -98,14 +101,6 @@ def save_chat(user_msg, ai_msg):
         writer = csv.writer(f)
         writer.writerow([current_session, user_msg, ai_msg, timestamp])
 
-## 加载历史函数
-def load_chat():
-    history = []
-    if os.path.exists(HISTORY_PATH):
-        with open(HISTORY_PATH, "r", encoding="utf-8") as f:
-            reader = csv.reader(f)
-            history = list(reader)
-    return history
 
 # 新增会话管理接口
 @app.route('/api/sessions')
@@ -157,6 +152,40 @@ def get_sessions():
         print(f"错误：排序时时间格式转换失败: {e}. 可能存在无效的时间戳。将返回未排序或部分排序的数据。")
     return jsonify(session_items)
 
+# 新增：加载特定会话内容的接口
+@app.route('/api/load_session')
+def load_session_content():
+    global current_session # 声明我们要修改全局变量
+    session_id = request.args.get('session') # 从查询参数获取 session_id
+    if not session_id:
+        return jsonify({"success": False, "error": "Missing session ID"}), 400
+
+    messages = []
+    if os.path.exists(HISTORY_PATH):
+        try:
+            with open(HISTORY_PATH, "r", encoding="utf-8") as f:
+                reader = csv.reader(f)
+                for row in reader:
+                    # 检查行格式并确保是目标 session_id
+                    if len(row) >= 4 and row[0] == session_id:
+                        # 按顺序添加用户消息和 AI 消息
+                        messages.append({"sender": "user", "text": row[1]})
+                        messages.append({"sender": "ai", "text": row[2]})
+            
+            # 切换后端的当前会话 ID
+            current_session = session_id
+            print(f"会话已切换到: {current_session}") # 后端日志，方便调试
+
+            return jsonify({"success": True, "messages": messages})
+        except Exception as e:
+            print(f"错误：加载会话 {session_id} 时出错: {e}")
+            return jsonify({"success": False, "error": f"加载会话时出错: {e}"}), 500
+    else:
+        # 如果历史文件不存在，但尝试加载一个 session_id，这可能是一个旧的ID
+ 
+        current_session = session_id
+        print(f"历史文件不存在，但已切换到会话: {current_session}")
+        return jsonify({"success": True, "messages": []}) # 返回空消息列表
 
 #是一个纯静态的前端文件（无动态模板渲染），适合直接通过 send_from_directory 返回。
 @app.route('/')
