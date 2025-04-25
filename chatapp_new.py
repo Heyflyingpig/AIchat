@@ -4,10 +4,8 @@ from openai import OpenAI
 import subprocess
 import os
 import csv
-import time
 import uuid
 from datetime import datetime
-import hashlib # 用于密码哈希
 import logging
 import json # <-- 导入 json 模块
 
@@ -18,11 +16,13 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 app = Flask(__name__, static_folder='static')
 current_session = str(uuid.uuid4()) ## 全局会话 ID，现在主要由前端在加载历史时设置
 BASE_DIR = os.path.dirname(__file__)
+SETTING_DIR = os.path.join(BASE_DIR, "setting")
+
 HISTORY_PATH = os.path.join(BASE_DIR, "chat_history.csv") ## 聊天历史
 USERS_PATH = os.path.join(BASE_DIR, "users.csv") # 新增：用户存储文件
 CONFIG_PATH = os.path.join(BASE_DIR, "config.json") # <-- 新增：配置文件路径
 
-# 全局变量存储当前登录用户 (替代依赖 localStorage)
+
 current_logged_in_user = None # <-- 新增：全局变量
 
 # --- 新增：配置文件读写函数 ---
@@ -129,7 +129,6 @@ def register_user(username, hashed_password):
         logging.error(f"写入用户文件时出错: {e}")
         return False, "注册过程中发生服务器错误。"
 
-# --- 新增：认证 API 端点 ---
 
 @app.route('/api/register', methods=['POST'])
 def handle_register():
@@ -183,7 +182,7 @@ def handle_login():
         logging.warning(f"用户登录失败（密码错误）: {username}")
         return jsonify({'success': False, 'error': '密码错误'}), 401 # 401 Unauthorized
 
-# --- 新增：退出登录 API 端点 ---
+# 登出
 @app.route('/api/logout', methods=['POST'])
 def handle_logout():
     global current_logged_in_user
@@ -461,6 +460,25 @@ def start_api_server():
 
 api_process = start_api_server()
 
+## 设置
+@app.route('/api/setting')
+def setting():
+    topic = request.args.get('topic') # 从查询参数获取 topic
+    request.args.get('topic')
+    topic_to_file = {
+            "userAgreement": "Userprivacy.txt",
+            "userManual": "manual.txt"
+        }
+    filename = topic_to_file.get(topic)
+    file_path = os.path.join(SETTING_DIR, filename)
+    with open(file_path,'r',encoding = 'utf-8') as f:
+        content = f.read()
+        if not os.path.exists(file_path):
+            logging.error(f"设置文件未找到: {file_path}")
+            # 返回更具体的错误信息给前端
+            return jsonify({"success": False, "error": f"请求的内容文件 '{filename}' 未找到"}), 404 # 返回 404 Not Found
+
+    return jsonify({"success": True, "messages": content})
 
 # 根路由 (不变)
 @app.route('/')
@@ -485,5 +503,4 @@ if __name__ == '__main__':
             api_process.wait(timeout=5) # 等待进程结束
             logging.info("simple-one-api 进程已终止。")
         except subprocess.TimeoutExpired:
-            logging.warning("终止 simple-one-api 进程超时，可能需要手动结束。")
             api_process.kill() # 强制结束

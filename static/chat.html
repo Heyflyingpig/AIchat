@@ -208,6 +208,7 @@
         display: flex; /* 需要显示时改为 flex */
     }
 
+    /* 登录界面 */
     .auth-container {
         background-color: white;
         padding: 30px 40px;
@@ -359,7 +360,113 @@
         cursor: pointer; /* 添加可点击提示 */
         /* 可以考虑用图片或 SVG 替换背景色 */
     }
+    /* 设置 */
+    .setting-popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        padding: 25px 35px; /* 增加内边距 */
+        border-radius: 8px;
+        box-shadow: 0 6px 25px rgba(0,0,0,0.3); /* 稍微调整阴影 */
+        z-index: 2001; /* 确保在用户信息弹窗之上或同级 */
+        display: none; /* 默认隐藏 */
+        width: 400px; /* 设定宽度 */
+        min-height: 200px; /* 设定最小高度 */
+        text-align: center; /* 让标题和关闭按钮居中 */
+        transition: opacity 0.3s, transform 0.3s; /* 添加过渡效果 */
+        opacity: 0; /* 初始透明度为0，配合过渡 */
+        transform: translate(-50%, -45%) scale(0.95); /* 初始稍微向上偏并缩小一点，用于动画 */
+    }
+    
+    .setting-button-container {
+        display: flex; /* 启用 Flexbox */
+        justify-content: center; /* 水平居中按钮组 */
+        gap: 20px; /* 设置按钮之间的间距 */
+        margin-top: 20px; /* 给按钮组和上方内容添加一些间距 */
+    }
+    
+    .setting-popup button:hover {
+        background-color: #5a6268;
+    }
+    
+    /* 返回 */
+    #backToSettingsButton {
+        background-color: #007bff; /* 蓝色，与发送按钮一致 */
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 10px 20px; /* 与关闭按钮一致 */
+        cursor: pointer;
+        font-size: 0.9em;
+        transition: background-color 0.2s;
+    }
+    #backToSettingsButton:hover {
+        background-color: #0056b3;
+    }
+    .setting-popup.active {
+        display: block; /* 显示弹窗 */
+        opacity: 1; /* 完全不透明 */
+        transform: translate(-50%, -50%) scale(1); /* 恢复正常大小和位置 */
+    }
+    
+    /* 字体 */
+    .setting-popup h3 {
+        margin-top: 0;
+        margin-bottom: 25px; /* 标题和选项之间的距离 */
+        color: #333;
+    }
+     /* 设置选项所有的版式 */
+    #settingOptions {
+        margin-bottom: 20px; /* 选项和内容显示区之间的距离 */
+        text-align: left; /* 让选项文字左对齐 */
+        display:block;
+    }
+    /* 每一个设置按钮 */
+    .setting-option {
+        padding: 12px 15px; /* 选项内边距 */
+        margin-bottom: 10px; /* 选项之间的距离 */
+        border: 1px solid #eee;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.2s; /* 悬停效果 */
+    }
+    
+    .setting-option:hover {
+        background-color: #f8f8f8; /* 鼠标悬停时的背景色 */
+    }
+    
+    #settingContentDisplay {
+        margin-top: 20px; /* 内容区与上方/选项的距离 */
+        margin-bottom: 20px; /* 内容区与关闭按钮的距离 */
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        min-height: 100px; /* 内容区最小高度 */
+        max-height: 300px; /* 内容区最大高度，超出则滚动 */
+        overflow-y: auto; /* 内容过多时显示滚动条 */
+        text-align: left; /* 内容左对齐 */
+        background-color: #f9f9f9; /* 给内容区一点背景色 */
+        white-space: pre-wrap; /* 保留文本中的空格和换行 */
+        word-wrap: break-word; /* 长单词换行 */
+        display: none; /* 初始隐藏内容区 */
+    }
 
+    .setting-popup button { /* 关闭按钮的样式 */
+        padding: 10px 20px;
+        background-color: #6c757d; /* 灰色 */
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+        transition: background-color 0.2s;
+    }
+
+    .setting-popup button:hover {
+        background-color: #5a6268;
+    }
     </style>
 </head>
 <body>
@@ -417,6 +524,25 @@
         </div>
     </div>
 
+    <!-- 设置 -->
+    <div id="settingPopup" class="setting-popup"> <!-- 新增 -->
+        <h3>设置</h3> <!-- 居中标题 -->
+        <div id="settingOptions"> <!-- 选项容器 -->
+            <div class="setting-option" onclick="handleSettingOption('userAgreement')">用户协议</div> <!-- 选项1 -->
+            <div class="setting-option" onclick="handleSettingOption('userManual')">操作文档</div> <!-- 选项2 -->
+            <div class="setting-option" onclick="handleSettingOption('checkUpdate')">检查更新</div> <!-- 选项3 -->
+        </div>
+        <div id="settingContentDisplay" style="display: none;">
+            <!-- 这里将显示从后端获取的文本内容 -->
+        </div>
+        
+        
+        <div class="setting-button-container">
+            <button id="backToSettingsButton" onclick="showSettingOptions()" style="display: none;">返回</button> <!-- 新增返回按钮, 默认隐藏 -->
+            <button onclick="hideSettingPopup()">关闭</button> <!-- 保持关闭按钮 -->
+       </div>
+    </div> <!-- settingPopup 的结束标签 -->
+
     <!-- 侧边栏图标 -->
     <div class="menu-icon" onclick="toggleSidebar()">☰</div>
 
@@ -450,7 +576,7 @@
     </div> <!-- sidebar-content 的结束标签 -->
         
         <div class="sidebar-footer">
-            <button>设置</button>
+            <button id="settingButton" onclick="showSettingPopup()">设置</button>
             <div class="user-avatar" id="userAvatar" onclick="showUserInfoPopup()">
                 <!-- 可以放用户名的首字母或图标 -->
             </div>
@@ -479,6 +605,10 @@
         const userInfoPopup = document.getElementById('userInfoPopup');
         const userInfoContent = document.getElementById('userInfoContent');
         const historyList = document.getElementById('historyList'); // 获取 historyList 元素
+        const settingPopup = document.getElementById('settingPopup'); // 获取设置
+        const settingOptions = document.getElementById('settingOptions'); // 新增：获取设置选项容器
+        const settingContentDisplay = document.getElementById('settingContentDisplay'); // 获取内容显示区域
+        const backToSettingsButton = document.getElementById('backToSettingsButton'); // 获取返回按钮
 
         // --- 新增：全局变量存储当前会话的用户名 ---
         let currentUsername = null;
@@ -695,7 +825,78 @@
             userInfoPopup.classList.remove('active');
         }
 
+        // 设置
+        function showSettingPopup() {
+            // 这里可以加一个登录检查，如果需要的话
+            if (!currentUsername) {
+                 showError("请先登录！");
+                 return;
+             }
+            console.log("打开设置弹窗");
+            // 重置到初始状态
+            settingOptions.style.display = 'block';
+            settingContentDisplay.style.display = 'none'; // 确保内容区隐藏
+            settingContentDisplay.innerHTML = ''; // 清空旧内容
+            backToSettingsButton.style.display = 'none'; // 新增：确保返回按钮隐藏
+            settingPopup.classList.add('active'); // 添加 active 类来显示弹窗（并触发动画）
+        }
 
+        //隐藏设置
+        function hideSettingPopup() {
+            console.log("关闭设置弹窗");
+            settingPopup.classList.remove('active'); 
+            setTimeout(() => {
+                 settingOptions.style.display = 'block';
+                 settingContentDisplay.style.display = 'none';
+                 settingContentDisplay.innerHTML = '';
+                 backToSettingsButton.style.display = 'none';
+             }, 300); // 300ms 匹配 CSS 过渡时间
+        }
+
+        //设置按钮点击处理
+        async function handleSettingOption(optionId) {
+            console.log(`点击了设置选项: ${optionId}`);
+
+            settingOptions.style.display = 'none'; // 修正：隐藏选项列表容器
+            settingContentDisplay.style.display = 'block'; // 显示内容区域
+            backToSettingsButton.style.display = 'inline-block'; // 显示返回按钮
+
+            settingContentDisplay.innerHTML = '<p>正在加载内容...</p>'; // 显示加载提示
+
+            if (optionId === 'checkUpdate') {
+            settingContentDisplay.innerHTML = '<p>版本已经更新到最新</p>'; // 显示提示信息
+            return; // 直接结束函数，不执行后续的 fetch
+        }
+            try {
+                const response = await fetch(`/api/setting?topic=${encodeURIComponent(optionId)}`); // 不需要区分选项，直接调用
+                const data = await response.json();
+
+                if (data.success && data.messages) {
+                    console.log("成功获取设置内容");
+                    
+                    settingContentDisplay.textContent = data.messages;
+
+                } else {
+                    console.error("获取设置内容失败:", data.error);
+                    // 显示错误信息
+                    settingContentDisplay.innerHTML = `<p style="color: red;">加载内容失败: ${data.error || '未知错误'}</p>`;
+                }
+            } catch (error) {
+                console.error("处理设置选项时出错:", error);
+                // 显示网络或请求错误信息
+                settingContentDisplay.innerHTML = `<p style="color: red;">加载内容时出错: ${error.message}</p>`;
+                // showError(`加载内容时出错: ${error.message}`); // 也可以用 alert
+            }
+        }
+        
+        // 返回设置列表
+        function showSettingOptions() {
+            console.log("返回设置选项列表");
+            settingOptions.style.display = 'block'; // 显示选项列表
+            settingContentDisplay.style.display = 'none'; // 隐藏内容区域
+            backToSettingsButton.style.display = 'none'; // 隐藏返回按钮
+            settingContentDisplay.innerHTML = ''; // 清空内容，避免下次直接显示旧内容
+        }
         // --- 修改现有函数以包含登录检查和用户名 ---
 
         // 初始化 (不变)
