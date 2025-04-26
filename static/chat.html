@@ -89,6 +89,8 @@
     body.sidebar-active .menu-icon {
         display: none; /* 将图标隐藏起来。当侧边栏打开时，就不需要显示这个用于打开侧边栏的图标了。*/
     }
+    
+    /* 主内容区 */
     .container {
         margin-left: 0;
         transition: margin-left 0.3s; /* 当 `margin-left` 属性变化时，
@@ -109,6 +111,22 @@
         flex-direction: column;
         gap: 20px; /* `gap` 属性设置 Flexbox 或 Grid 布局中项目之间的间隙。
                         这里表示每条聊天消息之间有 10 像素的垂直间距。*/
+        position: relative;
+                    }
+    
+    /* 伪元素 */
+    .chat-area::before {
+        content: 'FLYINGPIG-Chatbox'; /* 你想显示的文字 */
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 3em; /* 调整文字大小 */
+        font-weight: bold;
+        color: rgba(0, 0, 0, 0.06); /* 设置非常淡的颜色 */
+        z-index: 0; /* 确保在消息下方 */
+        pointer-events: none; /* 防止干扰鼠标事件 */
+        user-select: none; /* 防止被用户选中 */
     }
     .session-info {
         font-size: 0.9em;  /* 设置字体大小。`em` 是一个相对单位，`0.9em` 表示字体大小是其父元素字体大小的 90%。*/
@@ -160,9 +178,11 @@
         max-width: 80%;
         padding: 10px 15px;
         border-radius: 10px;
-        word-break: break-word;  /* `word-break` 属性规定自动换行的处理方法。
-                    将在任意字符处被强制换行，以防止文本溢出。*/
+        word-break: break-word;
         line-height: 1.4;
+        position: relative; /* 新增：确保消息在背景文字之上 */
+        z-index: 1;        /* 新增：确保消息在背景文字之上 */
+        background-color: white; /* 给消息一个不透明背景，防止背景文字透过来 */
     }
 
     /* 用户消息样式 */
@@ -468,6 +488,9 @@
         background-color: #5a6268;
     }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
+        //从 jsDelivr 这个 CDN 服务商提供的地址去下载 marked.js 这个库文件
+    </script>
 </head>
 <body>
     <!-- 新增：登录/注册覆盖层 -->
@@ -583,11 +606,12 @@
         </div>
     </div>
 
-    
+    <!-- 主界面 -->
     <div class="container" id="mainContainer">
         
         <div class="chat-area" id="chatArea"></div>
-        <!-- class="chat-area": 用于样式化聊天消息区域。 -->
+           
+        
         <div class="input-area">
             <textarea id="messageInput" placeholder="输入消息..." rows = "3"></textarea>
             <button onclick="sendMessage()">发送</button>
@@ -948,10 +972,15 @@
         // 界面更新
         function addMessage(text, sender) {
             const chatArea = document.getElementById('chatArea'); // 获取聊天区域
-            const div = document.createElement('div');
+            const div = document.createElement('div');//使用 在内存中创建一个新的、空白的 div 元素
             div.className = `message ${sender}-message`; // 类名保持不变
              // 它会包含 'message' 类和根据发送者是 'user' 还是 'ai' 动态添加的 'user-message' 或 'ai-message' 类。这对应了 CSS 中的样式规则。
+             if (sender === 'ai') {
+            div.innerHTML = marked.parse(text);
+        } else {
+            // 用户消息仍然使用 textContent 以防止 XSS
             div.textContent = text;
+        }
             chatArea.appendChild(div);
             // 修改滚动逻辑，滚动聊天区域而不是整个 body
             chatArea.scrollTop = chatArea.scrollHeight; 

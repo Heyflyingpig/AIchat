@@ -251,7 +251,7 @@ def switch_api():
         return jsonify({'success': False, 'error': '无效的 API 名称'}), 400
 
 
-# 温度设置类似，也应该是登录后操作
+# 温度设置类似，也应该是登录后操作  b
 @app.route('/api/temperature', methods=['POST'])
 def set_temperature():
     global temperature
