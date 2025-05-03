@@ -1,0 +1,18 @@
+{
+    "质谱AI" : {
+        "models": ["glm-4-flash"],
+        "frame" : "openai"
+    },
+    
+    "Deepseek" : {
+        "models": ["deepseek-chat"],
+        "frame" : "openai"
+    },
+    
+
+    "阿里通义千问" : {
+        "models": ["Qwen/Qwen2.5-7B-Instruct"],
+        "frame" : "openai"
+    }
+
+}
