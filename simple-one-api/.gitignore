@@ -1,5 +1,5 @@
 # 编译输出
-*.exe
+# *.exe
 *.exe~
 *.dll
 *.so
