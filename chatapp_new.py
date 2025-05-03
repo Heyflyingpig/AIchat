@@ -936,7 +936,7 @@ if __name__ == '__main__':
     logging.info("启动 Flask 应用和 webview 窗口...")
     window = webview.create_window('FLYINGPIG-AI', app, width=1000, height=700)
 
-    webview.start(debug=True) # <-- 移除 storage_path
+    webview.start(debug=False) # <-- 移除 storage_path
 
     # 清理 simple-one-api 进程 (当 webview 关闭时)
     if api_process and api_process.poll() is None: # 检查进程是否存在且在运行
