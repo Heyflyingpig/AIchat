@@ -1,6 +1,6 @@
 <!-- static/index.html -->
 <!DOCTYPE html>
-<html>
+    <html>
 <head>
     <title>FLYINGPIG-AI</title> <!-- 添加标题 -->
     <style>
@@ -487,8 +487,114 @@
     .setting-popup button:hover {
         background-color: #5a6268;
     }
+    /* 用于诊断为什么整个页面超出限制 */
+    /* 整体页面内容高度超出了视口。不过要注意，这样做可能会隐藏掉本应可见但被"挤出"视口的内容（如果确实有内容被挤出的话） */
+    body{
+        overflow: hidden;
+    }
+
+    .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000; /* 比侧边栏高 */
+        }
+    .modal-content {
+        background-color: white;
+        padding: 20px 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        min-width: 300px;
+        max-width: 500px;
+    }
+    .modal-content h3 { margin-top: 0; }
+    .modal-content input[type="password"] {
+        /* width: 100%; */ /* <-- 让flex接管宽度 */
+        flex-grow: 1; /* <-- 新增：让输入框填充可用空间 */
+        padding: 8px;
+        /* margin-top: 10px; */ /* <-- 移除，由容器控制 */
+        /* margin-bottom: 5px; */ /* <-- 移除，由容器控制 */
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+    .modal-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 15px;
+    }
+        
+        .help-icon {
+            cursor: pointer;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            line-height: 18px;
+            text-align: center;
+            font-weight: bold;
+            color: #666;
+            margin-left: 5px;
+        }
+
+    /* 加载指示器样式 */
+    .loading-spinner {
+        color: white;
+        font-size: 1.2em;
+        padding: 20px;
+        background-color: rgba(0, 0, 0, 0.7);
+        border-radius: 5px;
+    }
+    
+   
+
+    /* 新增：API Key 输入容器样式 */
+    .api-key-input-container {
+        display: flex;           /* 启用 Flexbox */
+        align-items: center;     /* 垂直居中对齐 */
+        gap: 8px;              /* 设置输入框和帮助图标之间的间隙 */
+        margin-top: 10px;      /* 容器顶部外边距 */
+        margin-bottom: 5px;       /* 容器底部外边距（在帮助文本<p>之上）*/
+    }
+    
+    /* 调整独立出来的帮助文本样式 */
+    #helpText {
+        margin-top: 5px; /* 保持与下方按钮的距离 */
+        margin-bottom: 15px; /* 增加与下方按钮的间距 */
+        font-size: 0.8em;
+        color: #666;
+        text-align: right; /* 保持文本右对齐 */
+    }
+
+    /* 添加在现有样式表的合适位置，例如在 loading-spinner 样式之后 */
+    .sidebar-button {
+        padding: 5px 10px;
+        border: 1px solid #000; /* 黑色边框 */
+        background-color: rgb(255, 255, 255); /* 白色背景 */
+        color: black; /* 黑色文字 */
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1em;
+    }
+
+    .sidebar-button:hover {
+        background-color: #f8f8f8f3; /* 悬停时浅灰色背景 */
+        color: #333; /* 悬停时深灰色文字 */
+    }
+
+    
+
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
+    <!-- 加载md格式 -->
+    <script src="/static/marked.min.js">
         //从 jsDelivr 这个 CDN 服务商提供的地址去下载 marked.js 这个库文件
     </script>
 </head>
@@ -578,13 +684,18 @@
         
         <div class="sidebar-content">
             <!-- 这个 div 使用了 `style` 属性来直接设置内联样式。这通常用于特定、小范围或动态的样式设置。 -->
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <select id="apiSelect" style="flex:1;">
-                    <option value="zhipuai">质谱AI</option>
-                    <option value="aliyunai">阿里云AI</option>
-                    <option value="deepseek">Deepseek</option>
-                </select>
-                <button onclick="newChat()">新建</button>
+            <!-- 修改：在 style 中添加 align-items: center; -->
+            <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center;">
+                 <!-- 放在 sidebar-content 合适的位置 -->
+                <div class="model-selector-container">
+                    <label for="modelSelector">选择模型:</label>
+                     <!-- 移除 select 上的内联 margin-bottom -->
+                     <select id="modelSelector" style="width: 100%; margin-bottom: 10px;">
+
+                        <!-- 模型选项将由 JS 动态填充 -->
+                    </select>
+                </div>
+                <button class="sidebar-button" onclick="newChat()">NEW CHAT</button>
             </div>
             
             <div id="historyList">
@@ -605,7 +716,37 @@
             </div>
         </div>
     </div>
+    
+    <!-- 模型选择    -->
+    <div id="apiKeyModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h3 id="apiKeyModalTitle">请输入 API Key</h3>
+             <!-- 新增：包裹输入框和帮助区域的容器 -->
+             <div class="api-key-input-container">
+                <input type="password" id="apiKeyInput" placeholder="粘贴您的 API Key">
+                <div class="modal-help">
+                    <span class="help-icon" onclick="toggleHelpText()">?</span>
+                    <!-- 注意：我们将帮助文本 <p> 移到了容器外部，以便其独立布局 -->
+                </div>
+             </div>
+             <!-- 帮助文本段落移到这里 -->
+             <p id="helpText" style="display: none; font-size: 0.8em; color: #666; margin-top: 5px; text-align: justify;">
+                 请在此处输入您从模型提供商获取的 API Key,该Key 只会保存在本地配置文件中,具体的获取方法请参考Q&A文档。
+             </p>
+            <div class="modal-buttons">
+                <button onclick="submitApiKey()">确定</button>
+                <button onclick="clearApiKey()">清除 Key</button>
+                <button onclick="hideApiKeyModal()" style="background-color: #6c757d;">取消</button>
+            </div>
+        </div>
+    </div>
 
+    <!-- 加载指示器 -->
+    <div id="loadingOverlay" class="modal-overlay" style="display: none;">
+        <div class="loading-spinner">
+            正在处理，请稍候... (可能需要重启服务)
+        </div>
+    </div>
     <!-- 主界面 -->
     <div class="container" id="mainContainer">
         
@@ -633,6 +774,16 @@
         const settingOptions = document.getElementById('settingOptions'); // 新增：获取设置选项容器
         const settingContentDisplay = document.getElementById('settingContentDisplay'); // 获取内容显示区域
         const backToSettingsButton = document.getElementById('backToSettingsButton'); // 获取返回按钮
+        const modelSelector = document.getElementById('modelSelector');
+        const apiKeyModal = document.getElementById('apiKeyModal');
+        const apiKeyModalTitle = document.getElementById('apiKeyModalTitle');
+        const apiKeyModelName = document.getElementById('apiKeyModelName');
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        const helpText = document.getElementById('helpText');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        
+        let modelsData = []; // 存储从后端获取的模型信息
+        let selectedModelForApiKey = null; // 存储当前需要输入 key 的模型名
 
         // --- 新增：全局变量存储当前会话的用户名 ---
         let currentUsername = null;
@@ -741,6 +892,9 @@
                      // 清空登录表单
                     usernameInput.value = '';
                     passwordInput.value = '';
+
+                    loadModels(); // <--- 加载模型列表
+                    modelSelector.disabled = false; // 启用选择器
                 } else {
                     loginError.textContent = data.error || '登录失败，请检查用户名和密码。';
                     currentUsername = null; // **修改**: 确保登录失败时全局变量为空
@@ -778,6 +932,9 @@
                     historyList.innerHTML = ''; // 清空历史列表
                     updateUserInfo(); // 清空头像等信息
                     console.log("用户已退出登录，UI已更新");
+                    modelSelector.disabled = true; // 禁用选择器
+                    modelSelector.options.length = 1; // 清空选项
+                    modelsData = []; // 清空模型数据
                 } else {
                     showError("退出登录失败，请稍后再试。");
                     console.error("后端登出失败:", data.error);
@@ -802,6 +959,37 @@
                     authOverlay.classList.remove('active');
                     updateUserInfo(); // 更新用户信息显示 (稍后修改此函数)
                     loadHistory(); // 加载历史记录 (稍后修改此函数)
+
+                    // --- 新增：加载模型并设置默认值 ---
+                    await loadModels(); // <--- 等待模型加载完成
+                    modelSelector.disabled = false; // 启用选择器
+
+                    // 检查是否有模型数据且模型列表不为空
+                    if (modelsData && modelsData.length > 0 && modelsData[0].models && modelsData[0].models.length > 0) {
+                        const firstModel = modelsData[0].models[0];
+                        console.log(`自动选择第一个模型: ${firstModel.name}`);
+                        modelSelector.value = firstModel.name; // 设置下拉框的值
+
+                        // 通知后端切换到这个模型
+                        const selectSuccess = await selectModelFrontend(firstModel.name);
+
+                        if (selectSuccess && firstModel.requires_key) {
+                             // 如果选择成功且该模型需要 key (但用户还没提供)，弹出输入框
+                             console.log(`默认模型 ${firstModel.name} 需要 API Key，弹出输入框。`);
+                             showApiKeyModal(firstModel.name);
+                         } else if (!selectSuccess) {
+                             // 如果后端选择失败，重置下拉框
+                             console.warn(`后端未能成功切换到默认模型 ${firstModel.name}，重置选择。`);
+                             modelSelector.value = ""; // 重置为 "请选择模型"
+                         }
+                    } else {
+                        console.log("没有可用的模型来设置默认值。");
+                         // 可以在这里禁用选择器或显示提示
+                         modelSelector.value = ""; // 确保是提示选项
+                         modelSelector.disabled = true; // 禁用，因为没有模型
+                    }
+                    // --- 新增结束 ---
+
                 } else {
                     console.log("后端验证：用户未登录，显示登录界面");
                     currentUsername = null; // **修改**: 确保全局变量为空
@@ -811,6 +999,8 @@
                     registerForm.style.display = 'none';
                     historyList.innerHTML = ''; // 清空可能存在的旧历史记录
                     updateUserInfo(); // 清空头像等 (稍后修改此函数)
+                    modelSelector.disabled = true; // 禁用选择器
+                    modelSelector.options.length = 1; // 清空选项
                 }
             } catch (error) {
                 console.error("检查认证状态时出错:", error);
@@ -923,12 +1113,54 @@
         }
         // --- 修改现有函数以包含登录检查和用户名 ---
 
-        // 初始化 (不变)
-        document.getElementById('messageInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
+        // 页面加载完成时
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM 已加载，检查登录状态...");
+            checkLoginStatus(); // 检查登录状态 (这个函数现在会调用 /api/check_auth)
+
+            // --- 新增：将事件监听器移到此处确保元素已加载 ---
+            const messageInput = document.getElementById('messageInput');
+            if (messageInput) {
+                messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
+            } else {
+                console.error("未能找到元素 #messageInput");
             }
+
+            // 为 modelSelector 添加事件监听器
+            if (modelSelector) { // modelSelector 是在脚本顶部定义的全局变量
+                modelSelector.addEventListener('change', async (event) => {
+                    const selectedOption = event.target.options[event.target.selectedIndex];
+                    const modelName = selectedOption.value;
+
+                    if (!modelName) return; // 忽略 "请选择模型" 选项
+
+                    if (!currentUsername) {
+                        showError("请先登录！");
+                        event.target.value = ""; // 重置选择
+                        return;
+                    }
+
+                    const requiresKey = selectedOption.dataset.requiresKey === 'true'; // 从 dataset 读取
+
+                    console.log(`用户选择了模型: ${modelName}, 是否需要 Key: ${requiresKey}`);
+
+                    if (requiresKey) {
+                        // 用户尚未提供 Key，显示 API Key 输入框
+                        showApiKeyModal(modelName);
+                    } else {
+                        // 用户已提供 Key (requiresKey is false)，直接通知后端切换模型
+                        await selectModelFrontend(modelName);
+                    }
+                });
+            } else {
+                console.error("未能找到元素 #modelSelector");
+            }
+            // --- 移动结束 ---
         });
 
         // API交互，使用异步调用，防止页面阻塞 - **修改**
@@ -1021,31 +1253,6 @@
             }
         }
 
-        // API 切换 - **修改** (虽然API切换本身不需要用户，但检查登录状态需要)
-        document.getElementById('apiSelect').addEventListener('change', async (e) => {
-             // const loggedInUser = localStorage.getItem('loggedInUser'); // <-- 移除
-             const loggedInUser = currentUsername; // **修改**: 使用全局变量检查登录
-             if (!loggedInUser) {
-                 showError("请先登录再切换 API！"); // 提示用户
-                 // 可以选择将下拉列表重置回之前的值
-                 // e.target.value = previousApiValue; // (需要保存之前的API值)
-                 return;
-             }
-
-            try {
-                await fetch('/api/switch', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ api: e.target.value })
-                });
-                 console.log(`API 已切换为 ${e.target.value}`);
-                 // previousApiValue = e.target.value; // 保存当前值
-            } catch (error) {
-                 showError('切换 API 时出错: ' + error);
-                 // e.target.value = previousApiValue; // 出错时恢复
-            }
-        });
-
         // 新增侧边栏切换功能 - **修改**
         function toggleSidebar() {
             // if (!localStorage.getItem('loggedInUser')) return; // <-- 移除
@@ -1131,6 +1338,7 @@
 
         // 加载特定会话内容 (修改为需要用户名) - **修改**
         async function loadSession(sessionId, username) { // 参数 username 仍然需要
+
              // const loggedInUser = currentUsername; // 可以用全局变量再次确认，但参数传递更直接
              if (!username || username !== currentUsername) { // **修改**: 做个检查，确保是当前登录用户在操作
                  showError("无法加载会话：用户状态异常或权限不足。");
@@ -1167,6 +1375,259 @@
             } catch (error) {
                 showError('加载会话时发生网络错误: ' + error);
                 console.error("加载会话错误:", error);
+            }
+        }
+    
+        async function loadModels() {
+            if (!currentUsername) return; // 确保已登录
+
+            console.log(`为用户 ${currentUsername} 加载模型列表...`);
+            try {
+                const response = await fetch(`/api/get_models?user=${encodeURIComponent(currentUsername)}`);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+                modelsData = await response.json(); // 存储数据到全局变量
+
+                // --- 修改：更彻底地清空旧选项和分组 ---
+                modelSelector.innerHTML = ''; // 直接清空 select 元素内部所有内容
+                // --- 清空逻辑修改结束 ---
+
+                // 填充模型选择器
+                modelsData.forEach(company => {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = company.company; // 公司名作为分组标签
+                    company.models.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model.name; // value 是模型名称
+                        option.textContent = model.name;
+                        // 将 requires_key 信息存储在 option 的 dataset 中，方便后续读取
+                        option.dataset.requiresKey = model.requires_key;
+                        optgroup.appendChild(option);
+                    });
+                    modelSelector.appendChild(optgroup);
+                });
+                 console.log("模型列表加载完成:", modelsData);
+                 // 确保选择器状态正确
+                 modelSelector.disabled = !(modelsData && modelsData.length > 0); // 如果没模型则禁用
+
+            } catch (error) {
+                console.error("加载模型列表失败:", error);
+                showError(`加载模型列表失败: ${error.message}`);
+                // 加载失败时也清空并禁用
+                modelSelector.innerHTML = ''; // 同样清空
+                modelSelector.disabled = true;
+            }
+        }
+    
+        function showApiKeyModal(modelName) {
+            selectedModelForApiKey = modelName; // 存储当前操作的模型
+            apiKeyModalTitle.textContent = `输入 ${modelName} 的 API Key`;
+            apiKeyInput.value = ''; // 清空输入框
+            helpText.style.display = 'none'; // 隐藏帮助文本
+            apiKeyModal.style.display = 'flex';
+            apiKeyInput.focus(); // 自动聚焦输入框
+        }
+
+        function hideApiKeyModal() {
+            apiKeyModal.style.display = 'none';
+            selectedModelForApiKey = null; // 清除当前操作的模型名
+
+            // --- 修改：移除重置选择器的代码 ---
+            // modelSelector.value = ""; // <-- 将这行代码删除或注释掉
+            console.log("API Key modal cancelled.");
+             // --- 修改结束 ---
+        }
+
+        function toggleHelpText() {
+            helpText.style.display = helpText.style.display === 'none' ? 'block' : 'none';
+        }
+    
+        async function submitApiKey() {
+            const apiKey = apiKeyInput.value.trim();
+            const modelName = selectedModelForApiKey; // 获取之前存储的模型名
+
+            if (!apiKey) {
+                alert("请输入 API Key！");
+                return;
+            }
+            if (!modelName) {
+                 console.error("无法提交 Key，因为没有选定的模型。");
+                 hideApiKeyModal();
+                 return;
+             }
+             if (!currentUsername) {
+                 showError("用户未登录，无法保存 Key！");
+                 hideApiKeyModal();
+                 return;
+             }
+
+            // 确认对话框
+            if (!confirm(`您确定要为模型 "${modelName}" 保存这个 API Key 吗？`)) {
+                return;
+            }
+
+            hideApiKeyModal(); // 先隐藏模态框
+            loadingOverlay.style.display = 'flex'; // 显示加载指示器
+
+            try {
+                const response = await fetch('/api/save_api_key', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        username: currentUsername,
+                        model_name: modelName,
+                        api_key: apiKey
+                    })
+                });
+
+                const data = await response.json();
+
+                loadingOverlay.style.display = 'none'; // 隐藏加载指示器
+
+                if (data.success) {
+                    alert(`模型 ${modelName} 的 API Key 保存成功！服务已重启。`);
+                    console.log(`API Key for ${modelName} saved successfully.`);
+
+                    // 更新前端模型数据，标记此模型不再需要输入 key（在此次会话中）
+                    const option = modelSelector.querySelector(`option[value="${modelName}"]`);
+                    if (option) {
+                        option.dataset.requiresKey = 'false';
+                    }
+                    // 找到 modelsData 中对应的模型并更新其 requires_key 状态 (可选，如果需要长期保持状态)
+                    modelsData.forEach(company => {
+                        const model = company.models.find(m => m.name === modelName);
+                        if (model) model.requires_key = false;
+                    });
+
+                    // 自动选择该模型作为当前模型 (因为后端保存后也可能切换了)
+                    // 不需要再调用 switchModelBackend，因为 save_api_key 后端可能已经切换了
+                     // 只需要确保 modelSelector 显示的是当前选中的模型
+                     modelSelector.value = modelName;
+                     console.log(`前端模型已自动切换到 ${modelName}`);
+
+
+                } else {
+                    showError(`保存 API Key 失败: ${data.error || '未知错误'}`);
+                    console.error("Save API Key failed:", data.error);
+                     // 如果保存失败，可能需要让用户重新输入，或者保持模型选择不变
+                     // 这里我们让用户手动再试
+                     modelSelector.value = ""; // 清空选择，让用户重选
+                }
+
+            } catch (error) {
+                loadingOverlay.style.display = 'none';
+                showError(`保存 API Key 时发生网络错误: ${error}`);
+                console.error("Submit API Key error:", error);
+                modelSelector.value = ""; // 出错也清空选择
+            }
+        }
+
+        // --- 新增：清除 API Key 的函数 ---
+        async function clearApiKey() {
+            const modelName = selectedModelForApiKey;
+
+            if (!modelName) {
+                 console.error("无法清除 Key，因为没有选定的模型。");
+                 hideApiKeyModal();
+                 return;
+             }
+             if (!currentUsername) {
+                 showError("用户未登录，无法清除 Key！");
+                 hideApiKeyModal();
+                 return;
+             }
+
+            // 添加确认
+             if (!confirm(`您确定要清除模型 "${modelName}" 保存的 API Key 吗？\n清除后，下次使用该模型需要重新输入 Key。`)) {
+                 return; // 用户取消
+             }
+
+            hideApiKeyModal(); // 先隐藏模态框
+            loadingOverlay.style.display = 'flex'; // 显示加载指示器
+
+            try {
+                const response = await fetch('/api/save_api_key', { // 调用相同的保存接口
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        username: currentUsername,
+                        model_name: modelName,
+                        api_key: "" // 发送空字符串表示清除
+                    })
+                });
+
+                const data = await response.json();
+                loadingOverlay.style.display = 'none'; // 隐藏加载指示器
+
+                if (data.success) {
+                    alert(`模型 ${modelName} 的 API Key 已清除！服务已重启。`);
+                    console.log(`API Key for ${modelName} cleared successfully.`);
+
+                    // 更新前端模型数据，标记此模型现在需要输入 key
+                    const option = modelSelector.querySelector(`option[value="${modelName}"]`);
+                    if (option) {
+                        option.dataset.requiresKey = 'true'; // 标记为需要 key
+                    }
+                    // 更新 modelsData (可选，但推荐)
+                    modelsData.forEach(company => {
+                         const model = company.models.find(m => m.name === modelName);
+                         if (model) model.requires_key = true;
+                    });
+
+                    // Key 已清除，重置模型选择，让用户重新选择或触发输入框
+                    modelSelector.value = "";
+                    console.log(`模型 ${modelName} 的 Key 已清除，重置模型选择器。`);
+
+                } else {
+                    showError(`清除 API Key 失败: ${data.error || '未知错误'}`);
+                    console.error("Clear API Key failed:", data.error);
+                }
+
+            } catch (error) {
+                loadingOverlay.style.display = 'none';
+                showError(`清除 API Key 时发生网络错误: ${error}`);
+                console.error("Clear API Key error:", error);
+            }
+        }
+
+        // --- 新增：仅用于通知后端切换模型的函数 ---
+        async function selectModelFrontend(modelName) {
+            if (!currentUsername) {
+                 showError("用户未登录！");
+                 return false; // 返回失败
+            }
+            console.log(`正在通知后端切换到模型: ${modelName} (用户已有Key)`);
+            // 这个操作通常很快，可以选择不显示加载指示器
+            // loadingOverlay.style.display = 'flex';
+
+            try {
+                const response = await fetch('/api/select_model', { // 调用后端的 select_model
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ username: currentUsername, model_name: modelName })
+                });
+                const data = await response.json();
+                // loadingOverlay.style.display = 'none';
+
+                if (data.success) {
+                    console.log(`后端已成功切换到 API: ${data.selected_api} (模型: ${modelName})`);
+                    // 可以在此更新 UI，例如高亮选中的模型，或者给用户一个成功的提示
+                    // alert(`已切换到模型: ${modelName}`); // (可选提示)
+                    return true; // 返回成功
+                } else {
+                    showError(`切换模型失败: ${data.error || '未知错误'}`);
+                    console.error("Switch model failed:", data.error);
+                     modelSelector.value = ""; // 切换失败，重置选择器
+                     return false; // 返回失败
+                }
+            } catch (error) {
+                 // loadingOverlay.style.display = 'none';
+                showError(`切换模型时发生网络错误: ${error}`);
+                console.error("Switch model network error:", error);
+                 modelSelector.value = ""; // 切换失败，重置选择器
+                 return false; // 返回失败
             }
         }
     </script>
