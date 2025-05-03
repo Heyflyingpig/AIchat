@@ -53,7 +53,7 @@
         ],
         "enabled": true,
         "credentials": {
-          "api_key": "sk-62ea2bdf0a064360b8f23fb95bfcb52e"
+          "api_key": ""
         },
         "server_url": "https://api.deepseek.com/v1"
       },
