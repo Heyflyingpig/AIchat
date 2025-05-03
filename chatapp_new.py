@@ -934,7 +934,7 @@ if __name__ == '__main__':
     start_api_server() # <--- 在这里启动
     # 启动 Flask app (webview 会处理)
     logging.info("启动 Flask 应用和 webview 窗口...")
-    window = webview.create_window('FLYINGPIG-AI', app, width=1000, height=700)
+    window = webview.create_window('FLYINGPIG-Chatbox', app, width=1000, height=700)
 
     webview.start(debug=False) # <-- 移除 storage_path
 
