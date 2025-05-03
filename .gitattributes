@@ -1,2 +1,35 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Python build artifacts and virtual environment
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+
+# Environment variables file (good practice)
+.env
+
+# User generated data (VERY IMPORTANT!)
+# These files are created/modified during runtime and contain user-specific info.
+# DO NOT commit them to the repository.
+chat_history.csv
+users.csv
+Uconfig.json
+user_api_keys.json
+
+
+# IDE/Editor specific files
+.vscode/
+.idea/
+*.swp
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Log files (if any)
+*.log
+
+# PyInstaller build artifacts (if you ever use it)
+dist/
+build/
+*.spec
