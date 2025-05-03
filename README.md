@@ -4,6 +4,8 @@
 
 本应用的目的是为了容纳市面上的部分的LLMs（大语言模型）或者本地大模型（ollama部署）(未完成)，并且提供大量的可自定义参数（未完成）用于微调大模型，以用统一的架构来便利用户的使用。
 
+**非常欢迎大家star或者issue！这对我非常重要**
+
 应用内截图
 
 ![1746267389015](images/README/1746267389015.png)
@@ -28,12 +30,12 @@
 
 FLYINGPIG-Chatbox 是用 Python 编写的，因此您必须先安装 Python 环境。
 
-1. **推荐版本:** 我们建议安装 **Python 3.8 或更高版本**。
+1. **推荐版本:** 我们建议安装 **Python 3.12.9**。
 2. **下载:** 前往 Python 官方网站下载页面：[https://www.python.org/downloads/](https://www.python.org/downloads/)
 3. **安装 (非常重要):**
 
    * 运行下载的安装程序。
-   * 在安装界面的**第一个屏幕**，**务必勾选 "Add Python X.X to PATH"**（其中 X.X 是您下载的版本号，例如 "Add Python 3.10 to PATH"）。**这是关键步骤！** 如果不勾选，后续步骤中的命令将无法执行。
+   * 在安装界面的**第一个屏幕**，**务必勾选 "Add Python X.X to PATH"**（其中 X.X 是您下载的版本号，例如 "Add Python 3.12.9 to PATH"）。**这是关键步骤！** 如果不勾选，后续步骤中的命令将无法执行。
    * 继续按照安装程序的提示完成安装。
 4. **验证安装:** 安装完成后，打开您的命令行工具，输入以下命令并按回车：
 
@@ -73,7 +75,7 @@ FLYINGPIG-Chatbox 是用 Python 编写的，因此您必须先安装 Python 环�
 
    *备选方案：您也可以在 GitHub 页面上点击 "Code" -> "Download ZIP" 下载项目的压缩包，然后手动解压。*
 
-**项目到目前位置就安装到电脑上了，现在提供下面提供**两种打开项目****
+**项目到目前位置就安装到电脑上了，现在提供下面提供两种打开项目方式
 
 ### 方法一:
 
@@ -132,7 +134,6 @@ python chatapp_new.py
 
 - Q：为什么一开始启动的时候会白屏？
   A：**请稍等片刻**，由于项目用到了simple-one-api项目,由于作者实力有限，只能调用该项目构建的的exe文件，所有只能等待该项目启动之后才可以运行程序
-
 - Q:什么是api_key,该怎么获取？
   A：api_key的获取请参考https://blog.csdn.net/qq_43025083/article/details/147686477?fromshare=blogdetail&sharetype=blogdetail&sharerId=147686477&sharerefer=PC&sharesource=qq_43025083&sharefrom=from_link
 
