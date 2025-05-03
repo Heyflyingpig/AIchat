@@ -84,4 +84,4 @@ FLYINGPIG-Chatbox 支持连接多种不同公司或来源的大语言模型。�
 
 ---
 
-希望这份手册能帮助您更好地使用 FLYINGPIG-Chatbox！如果您遇到任何问题，请提issues或者联系作者 https://github.com/Heyflyingpig/AIchat。
+希望这份手册能帮助您更好地使用 FLYINGPIG-Chatbox！如果您遇到任何问题，请提issues或者联系作者 https://github.com/Heyflyingpig/AIchatbox。
