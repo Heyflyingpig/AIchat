@@ -130,10 +130,11 @@ python chatapp_new.py
 
 ## Q&A
 
-Q：为什么一开始启动的时候会白屏？
-A：**请稍等片刻**，由于项目用到了simple-one-api项目,由于作者实力有限，只能调用该项目构建的的exe文件，所有只能等待该项目启动之后才可以运行程序
-Q:什么是api_key,该怎么获取？
-A：api_key的获取请参考https://blog.csdn.net/qq_43025083/article/details/147686477?fromshare=blogdetail&sharetype=blogdetail&sharerId=147686477&sharerefer=PC&sharesource=qq_43025083&sharefrom=from_link
+- Q：为什么一开始启动的时候会白屏？
+  A：**请稍等片刻**，由于项目用到了simple-one-api项目,由于作者实力有限，只能调用该项目构建的的exe文件，所有只能等待该项目启动之后才可以运行程序
+
+- Q:什么是api_key,该怎么获取？
+  A：api_key的获取请参考https://blog.csdn.net/qq_43025083/article/details/147686477?fromshare=blogdetail&sharetype=blogdetail&sharerId=147686477&sharerefer=PC&sharesource=qq_43025083&sharefrom=from_link
 
 ## 未来计划
 
